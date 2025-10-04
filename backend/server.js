@@ -9,9 +9,10 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: 'http://localhost:3000', // Replace with your frontend URL
+    origin: 'http://localhost:5173', // Replace with your frontend URL
     credentials: true // Important for cookies
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
