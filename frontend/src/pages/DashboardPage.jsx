@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { useAuth } from '../context/AuthContext';
+// We only need expenseService now
 import { expenseService } from '../services/expenseService';
 
 // Employee View Component
@@ -13,22 +14,44 @@ const EmployeeDashboard = () => (
 const ManagerDashboard = () => {
     const [approvals, setApprovals] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    const fetchApprovals = async () => {
+        setIsLoading(true);
+        try {
+            const response = await expenseService.getPendingApprovals();
+            setApprovals(response.data);
+        } catch (error) {
+            console.error("Failed to fetch pending approvals", error);
+            setError("Could not load approvals.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchApprovals = async () => {
-            try {
-                const response = await expenseService.getPendingApprovals();
-                setApprovals(response.data);
-            } catch (error) {
-                console.error("Failed to fetch pending approvals", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
         fetchApprovals();
     }, []);
 
+    const handleProcessExpense = async (expenseId, decision) => {
+        const comments = prompt(`Enter comments for this ${decision.toLowerCase()}:`);
+        if (comments === null) return; // User cancelled the prompt
+
+        try {
+            // **THIS IS THE FIX:** Changed from approvalService to expenseService
+            await expenseService.processExpense(expenseId, decision, comments);
+            
+            // Remove the processed expense from the list
+            setApprovals(prev => prev.filter(item => item.id !== expenseId));
+        } catch (err) {
+            console.error(`Failed to ${decision.toLowerCase()} expense`, err);
+            alert(`Error: ${err.response?.data?.message || 'Could not process the expense.'}`);
+        }
+    };
+
+
     if (isLoading) return <div>Loading approvals...</div>;
+    if (error) return <div className="text-red-500">{error}</div>;
 
     return (
         <Card>
@@ -48,12 +71,12 @@ const ManagerDashboard = () => {
                            {approvals.map(item => (
                                <tr key={item.id} className="border-t">
                                    <td className="px-4 py-3">{item.submittedBy.name}</td>
-                                   <td className="px-4 py-3">{item.expenseDate}</td>
+                                   <td className="px-4 py-3">{new Date(item.expenseDate).toLocaleDateString()}</td>
                                    <td className="px-4 py-3">{item.currency} {item.amount}</td>
                                    <td className="px-4 py-3">
                                        <div className="flex justify-center items-center gap-2">
-                                           <Button variant="primary" className="text-xs !px-2 !py-1">Approve</Button>
-                                           <Button variant="danger" className="text-xs !px-2 !py-1">Reject</Button>
+                                           <Button onClick={() => handleProcessExpense(item.id, 'Approved')} variant="primary" className="text-xs !px-2 !py-1">Approve</Button>
+                                           <Button onClick={() => handleProcessExpense(item.id, 'Rejected')} variant="danger" className="text-xs !px-2 !py-1">Reject</Button>
                                        </div>
                                    </td>
                                </tr>

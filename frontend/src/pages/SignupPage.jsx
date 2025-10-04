@@ -10,7 +10,8 @@ export default function SignupPage() {
         companyName: '',
         adminName: '',
         email: '',
-        password: ''
+        password: '',
+        countryCode: '' // Added countryCode
     });
     const [error, setError] = useState('');
 
@@ -21,6 +22,10 @@ export default function SignupPage() {
     const handleSignup = async (e) => {
         e.preventDefault();
         setError('');
+        if (!formData.countryCode || formData.countryCode.length < 2) {
+            setError("Please enter a valid 2 or 3 letter country code (e.g., US, IN).");
+            return;
+        }
         try {
             await signup(formData);
             // Navigation is handled by the AuthContext after successful signup/login
@@ -41,6 +46,7 @@ export default function SignupPage() {
                     <input id="adminName" placeholder="Your Name" value={formData.adminName} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
                     <input id="email" type="email" placeholder="Email Address" value={formData.email} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
                     <input id="password" type="password" placeholder="Password" value={formData.password} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+                    <input id="countryCode" placeholder="Country Code (e.g., US, IN)" value={formData.countryCode} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
                     <div className="pt-2"><Button type="submit">Create Account</Button></div>
                 </form>
                 <p className="text-center text-sm text-gray-600 mt-6">
