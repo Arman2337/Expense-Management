@@ -45,7 +45,7 @@ const Header = ({ toggleSidebar }) => (
         <button onClick={toggleSidebar} className="md:hidden text-gray-500"><Menu size={24} /></button>
         <div className="text-gray-800 font-semibold hidden md:block">Welcome back!</div>
         <div className="flex items-center space-x-4">
-            <img className="h-10 w-10 rounded-full object-cover" src="https://i.pravatar.cc/150" alt="User Avatar" />
+            <img className="h-10 w-10 rounded-full object-cover" src="https://placehold.co/150x150" alt="User Avatar" />
         </div>
     </header>
 );
