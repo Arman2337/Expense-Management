@@ -4,8 +4,10 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import DashboardPage from './pages/DashboardPage';
 import NewExpensePage from './pages/NewExpensePage';
+import MyExpensesPage from './pages/MyExpensesPage'; // ADD THIS
 import UserManagementPage from './pages/UserManagementPage';
-import ProtectedRoute from './components/ProtectedRoute'; // <-- Import ProtectedRoute
+import ProtectedRoute from './components/ProtectedRoute';
+import SettingsPage from './pages/SettingsPage';
 
 function App() {
   return (
@@ -14,13 +16,14 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
 
-      {/* Private Routes are now wrapped in ProtectedRoute */}
+      {/* Private Routes */}
       <Route element={<ProtectedRoute />}>
         <Route element={<DashboardLayout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/expenses/new" element={<NewExpensePage />} />
+          <Route path="/expenses/my" element={<MyExpensesPage />} /> {/* ADD THIS */}
           <Route path="/users" element={<UserManagementPage />} />
-          {/* Add other authenticated routes here */}
+          <Route path="/settings" element={<SettingsPage />} /> {/* Add this */}
         </Route>
       </Route>
       
