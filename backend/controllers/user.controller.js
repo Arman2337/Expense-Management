@@ -16,9 +16,21 @@ exports.createUser = async (req, res) => {
     });
     res.status(201).send({ message: "User created successfully." });
   } catch (error) {
-    res.status(500).send({ message: error.message });
-  }
+        // **IMPROVED ERROR HANDLING IS HERE**
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            // This error happens when the email is already in use
+            return res.status(409).send({ message: "Error: Email address is already registered." });
+        }
+        if (error.name === 'SequelizeValidationError') {
+            // This error happens if a field fails a model validation (e.g., password too short)
+            const messages = error.errors.map(e => e.message);
+            return res.status(400).send({ message: `Validation error: ${messages.join(', ')}` });
+        }
+        // For any other unexpected errors
+        res.status(500).send({ message: error.message || "An unexpected error occurred while creating the user." });
+    }
 };
+
 
 exports.getAllUsers = async (req, res) => {
     try {
