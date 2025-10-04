@@ -116,7 +116,7 @@ export default function NewExpensePage() {
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Description */}
                         <div className="group">
-                            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                            <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                                 <FileText className="w-4 h-4 text-gray-400" />
                                 Description *
                             </label>
@@ -135,7 +135,7 @@ export default function NewExpensePage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Category */}
                             <div className="group">
-                                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                                     <Tag className="w-4 h-4 text-gray-400" />
                                     Category *
                                 </label>
@@ -155,7 +155,7 @@ export default function NewExpensePage() {
 
                             {/* Amount */}
                             <div className="group">
-                                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                                     <DollarSign className="w-4 h-4 text-gray-400" />
                                     Amount *
                                 </label>
@@ -174,7 +174,7 @@ export default function NewExpensePage() {
 
                         {/* Date */}
                         <div className="group">
-                            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2 items-center gap-2">
                                 <Calendar className="w-4 h-4 text-gray-400" />
                                 Expense Date *
                             </label>
@@ -190,7 +190,7 @@ export default function NewExpensePage() {
 
                         {/* Receipt Upload */}
                         <div className="group">
-                            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                            <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                                 <Upload className="w-4 h-4 text-gray-400" />
                                 Receipt (Optional)
                             </label>
