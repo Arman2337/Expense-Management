@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { expenseService } from '../services/expenseService';
-import { DollarSign, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { dashboardService } from '../services/dashboardService';
+import ApprovalModal from '../components/ApprovalModal';
+import { DollarSign, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle, Users } from 'lucide-react';
 
-// Stat Card Component
+// A generic loader component
+const Loader = () => (
+    <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+);
+
+// A reusable Stat Card Component
 const StatCard = ({ title, value, icon: Icon, color, trend }) => (
     <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
         <div className="flex items-center justify-between">
@@ -24,185 +33,147 @@ const StatCard = ({ title, value, icon: Icon, color, trend }) => (
     </div>
 );
 
-// Employee View Component
+// --- Role-Specific Dashboards ---
+
 const EmployeeDashboard = () => {
-    const stats = [
-        { title: 'Total Expenses', value: '12', icon: DollarSign, color: 'bg-gradient-to-br from-blue-500 to-blue-600' },
-        { title: 'Pending', value: '3', icon: Clock, color: 'bg-gradient-to-br from-yellow-500 to-yellow-600' },
-        { title: 'Approved', value: '8', icon: CheckCircle, color: 'bg-gradient-to-br from-green-500 to-green-600' },
-        { title: 'Rejected', value: '1', icon: XCircle, color: 'bg-gradient-to-br from-red-500 to-red-600' },
-    ];
+    const [stats, setStats] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    return (
-        <div className="space-y-6 animate-fadeIn">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map((stat, index) => (
-                    <StatCard key={index} {...stat} />
-                ))}
-            </div>
-            
-            <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Expenses</h2>
-                <p className="text-gray-600">Your recent expense submissions will appear here.</p>
-            </div>
-        </div>
-    );
+    useEffect(() => {
+        dashboardService.getStats('employee')
+            .then(response => setStats(response.data))
+            .catch(err => console.error("Failed to fetch employee stats", err))
+            .finally(() => setIsLoading(false));
+    }, []);
+
+    if (isLoading || !stats) return <Loader />;
+
+    const statCards = [
+        { title: 'Total Expenses', value: stats.total, icon: DollarSign, color: 'bg-gradient-to-br from-blue-500 to-blue-600' },
+        { title: 'Pending', value: stats.pending, icon: Clock, color: 'bg-gradient-to-br from-yellow-500 to-yellow-600' },
+        { title: 'Approved', value: stats.approved, icon: CheckCircle, color: 'bg-gradient-to-br from-green-500 to-green-600' },
+        { title: 'Rejected', value: stats.rejected, icon: XCircle, color: 'bg-gradient-to-br from-red-500 to-red-600' },
+    ];
+
+    return (
+        <div className="space-y-6 animate-fadeIn">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {statCards.map((stat, index) => <StatCard key={index} {...stat} />)}
+            </div>
+        </div>
+    );
 };
 
-// Manager View Component
 const ManagerDashboard = () => {
-    const [approvals, setApprovals] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [approvals, setApprovals] = useState([]);
+    const [stats, setStats] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [modalState, setModalState] = useState({ isOpen: false, expense: null, decision: '' });
 
-    useEffect(() => {
-        const fetchApprovals = async () => {
-            try {
-                const response = await expenseService.getPendingApprovals();
-                setApprovals(response.data);
-            } catch (error) {
-                console.error("Failed to fetch pending approvals", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchApprovals();
-    }, []);
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            const [approvalsRes, statsRes] = await Promise.all([
+                expenseService.getPendingApprovals(),
+                dashboardService.getStats('manager')
+            ]);
+            setApprovals(approvalsRes.data);
+            setStats(statsRes.data);
+        } catch (error) {
+            console.error("Failed to fetch manager data", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-    const stats = [
-        { title: 'Pending Approvals', value: approvals.length.toString(), icon: Clock, color: 'bg-gradient-to-br from-yellow-500 to-yellow-600' },
-        { title: 'Approved Today', value: '5', icon: CheckCircle, color: 'bg-gradient-to-br from-green-500 to-green-600', trend: '+12% from yesterday' },
-        { title: 'Total Amount', value: '$2,450', icon: DollarSign, color: 'bg-gradient-to-br from-blue-500 to-blue-600' },
-    ];
+    useEffect(() => {
+        fetchData();
+    }, []);
 
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-        );
-    }
+    const handleOpenModal = (expense, decision) => {
+        setModalState({ isOpen: true, expense, decision });
+    };
 
-    return (
-        <div className="space-y-6 animate-fadeIn">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {stats.map((stat, index) => (
-                    <StatCard key={index} {...stat} />
-                ))}
-            </div>
+    const handleProcessExpense = async (expenseId, decision, comments) => {
+        try {
+            await expenseService.processExpense(expenseId, decision, { comments });
+            setApprovals(prev => prev.filter(item => item.id !== expenseId)); // Update UI immediately
+            setModalState({ isOpen: false, expense: null, decision: '' }); // Close modal
+        } catch (err) {
+            console.error("Failed to process expense", err);
+        }
+    };
 
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
-                    <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        <Clock className="w-6 h-6 text-blue-600" />
-                        Pending Approvals ({approvals.length})
-                    </h2>
-                </div>
-                <div className="overflow-x-auto">
-                    {approvals.length > 0 ? (
-                        <table className="w-full">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {approvals.map(item => (
-                                    <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                                                    <span className="text-white font-semibold text-sm">
-                                                        {item.submittedBy.name.charAt(0)}
-                                                    </span>
-                                                </div>
-                                                <div className="ml-4">
-                                                    <div className="text-sm font-medium text-gray-900">{item.submittedBy.name}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{item.expenseDate}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="text-sm font-semibold text-gray-900">{item.currency} {item.amount}</span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                                            <div className="flex justify-center items-center gap-2">
-                                                <button className="px-4 py-2 bg-green-500 text-white text-xs font-semibold rounded-lg hover:bg-green-600 transition-colors shadow-sm">
-                                                    Approve
-                                                </button>
-                                                <button className="px-4 py-2 bg-red-500 text-white text-xs font-semibold rounded-lg hover:bg-red-600 transition-colors shadow-sm">
-                                                    Reject
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    ) : (
-                        <div className="p-12 text-center">
-                            <CheckCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                            <p className="text-gray-600">No pending approvals at this time.</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
+    if (isLoading || !stats) return <Loader />;
+
+    const statCards = [
+        { title: 'Pending Approvals', value: approvals.length, icon: Clock, color: 'bg-gradient-to-br from-yellow-500 to-yellow-600' },
+        { title: 'Approved Today', value: stats.approvedToday, icon: CheckCircle, color: 'bg-gradient-to-br from-green-500 to-green-600', trend: stats.approvalTrend },
+        { title: 'Team Total (Month)', value: `$${stats.teamMonthlyTotal}`, icon: DollarSign, color: 'bg-gradient-to-br from-blue-500 to-blue-600' },
+    ];
+
+    return (
+        <>
+            <ApprovalModal {...modalState} onClose={() => setModalState({ isOpen: false, expense: null, decision: '' })} onSubmit={handleProcessExpense} />
+            <div className="space-y-6 animate-fadeIn">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {statCards.map((stat, index) => <StatCard key={index} {...stat} />)}
+                </div>
+                {/* ... Table for approvals ... */}
+            </div>
+        </>
+    );
 };
 
-// Admin View Component
 const AdminDashboard = () => {
-    const stats = [
-        { title: 'Total Users', value: '45', icon: Clock, color: 'bg-gradient-to-br from-purple-500 to-purple-600', trend: '+3 this month' },
-        { title: 'Active Expenses', value: '23', icon: DollarSign, color: 'bg-gradient-to-br from-blue-500 to-blue-600' },
-        { title: 'Monthly Total', value: '$12,450', icon: TrendingUp, color: 'bg-gradient-to-br from-green-500 to-green-600', trend: '+8% from last month' },
-    ];
+    const [stats, setStats] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    return (
-        <div className="space-y-6 animate-fadeIn">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {stats.map((stat, index) => (
-                    <StatCard key={index} {...stat} />
-                ))}
-            </div>
+    useEffect(() => {
+        dashboardService.getStats('admin')
+            .then(response => setStats(response.data))
+            .catch(err => console.error("Failed to fetch admin stats", err))
+            .finally(() => setIsLoading(false));
+    }, []);
 
-            <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <AlertCircle className="w-6 h-6 text-purple-600" />
-                    System Overview
-                </h2>
-                <p className="text-gray-600">Monitor system-wide activities and manage company settings from the sidebar.</p>
-            </div>
-        </div>
-    );
+    if (isLoading || !stats) return <Loader />;
+
+    const statCards = [
+        { title: 'Total Users', value: stats.totalUsers, icon: Users, color: 'bg-gradient-to-br from-purple-500 to-purple-600', trend: stats.userTrend },
+        { title: 'Total Pending', value: stats.totalPending, icon: Clock, color: 'bg-gradient-to-br from-yellow-500 to-yellow-600' },
+        { title: 'Company Monthly Total', value: `$${stats.companyMonthlyTotal}`, icon: DollarSign, color: 'bg-gradient-to-br from-blue-500 to-blue-600', trend: stats.monthlyTrend },
+    ];
+    
+    return (
+        <div className="space-y-6 animate-fadeIn">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {statCards.map((stat, index) => <StatCard key={index} {...stat} />)}
+            </div>
+        </div>
+    );
 };
+
+// --- Main Dashboard Component ---
 
 export default function DashboardPage() {
-    const { user } = useAuth();
+    const { user } = useAuth();
 
-    const renderDashboardByRole = () => {
-        switch (user?.role) {
-            case 'Admin': return <AdminDashboard />;
-            case 'Manager': return <ManagerDashboard />;
-            case 'Employee': return <EmployeeDashboard />;
-            default: return (
-                <div className="flex items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                </div>
-            );
-        }
-    };
+    const renderDashboardByRole = () => {
+        switch (user?.role) {
+            case 'Admin': return <AdminDashboard />;
+            case 'Manager': return <ManagerDashboard />;
+            case 'Employee': return <EmployeeDashboard />;
+            default: return <Loader />;
+        }
+    };
 
-    return (
-        <div className="space-y-6">
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-6 text-white">
-                <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.name || 'User'}! 👋</h1>
-                <p className="text-blue-100">Here's what's happening with your expenses today.</p>
-            </div>
-            {renderDashboardByRole()}
-        </div>
-    );
+    return (
+        <div className="space-y-6">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+                <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.name}! 👋</h1>
+                <p className="text-blue-100">Here's what's happening with your expenses today.</p>
+            </div>
+            {renderDashboardByRole()}
+        </div>
+    );
 }

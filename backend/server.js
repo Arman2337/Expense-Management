@@ -37,6 +37,7 @@ app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/expenses', require('./routes/expense.routes'));
 app.use('/api/approvals', require('./routes/approval.routes'));
+app.use('/api/dashboard', require('./routes/dashboard.routes'));
 
 
 // Set port, listen for requests
