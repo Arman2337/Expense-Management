@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, Menu, X, LayoutDashboard, ScrollText, Users, Settings, PlusCircle, Bell } from 'lucide-react';
+import { LogOut, Menu, X, LayoutDashboard, ScrollText, Users, Settings, PlusCircle, Bell, ShieldCheck, Scale } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -13,13 +13,23 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         navigate('/login');
     };
 
-    const navItems = [
-        { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/' },
-        { name: 'New Expense', icon: <PlusCircle size={20} />, path: '/expenses/new' },
-        { name: 'My Expenses', icon: <ScrollText size={20} />, path: '/expenses/my' },
-        { name: 'User Management', icon: <Users size={20} />, path: '/users' },
-        { name: 'Settings', icon: <Settings size={20} />, path: '/settings' },
-    ];
+    // 1. Define ALL possible navigation items with a 'roles' property
+    const allNavItems = useMemo(() => [
+        { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/', roles: ['Admin', 'Manager', 'Employee'] },
+        { name: 'New Expense', icon: <PlusCircle size={20} />, path: '/expenses/new', roles: ['Employee'] },
+        { name: 'My Expenses', icon: <ScrollText size={20} />, path: '/expenses/my', roles: ['Employee'] },
+        { name: 'Pending Approvals', icon: <ShieldCheck size={20} />, path: '/approvals/team', roles: ['Manager'] },
+        { name: 'User Management', icon: <Users size={20} />, path: '/users', roles: ['Admin'] },
+        { name: 'Approval Rules', icon: <Scale size={20} />, path: '/rules', roles: ['Admin'] },
+        { name: 'Settings', icon: <Settings size={20} />, path: '/settings', roles: ['Admin'] },
+    ], []);
+
+    // 2. Filter the items based on the current user's role
+    const filteredNavItems = useMemo(() => {
+        if (!user?.role) return [];
+        return allNavItems.filter(item => item.roles.includes(user.role));
+    }, [user, allNavItems]);
+
 
     const NavLink = ({ path, icon, name }) => {
         const isActive = location.pathname === path;
@@ -41,68 +51,62 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
     return (
         <>
-            {/* Mobile Overlay */}
-            <div 
-                className={`fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden transition-opacity duration-300 ${
-                    isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                }`} 
-                onClick={() => setIsOpen(false)}
-            />
-            
-            {/* Sidebar */}
+            {/* ... (rest of the component is the same) ... */}
             <aside className={`fixed top-0 left-0 h-full w-64 bg-gray-800 text-white flex flex-col z-40 transform transition-transform duration-300 md:relative md:translate-x-0 shadow-2xl ${
-                isOpen ? 'translate-x-0' : '-translate-x-full'
-            }`}>
-                {/* Header */}
-                <div className="h-20 flex items-center justify-between px-6 border-b border-gray-700 bg-gradient-to-r from-gray-800 to-gray-900">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-                            <span className="text-white text-xl font-bold">E</span>
-                        </div>
-                        <h1 className="text-xl font-bold">Expenso</h1>
-                    </div>
-                    <button 
-                        onClick={() => setIsOpen(false)} 
-                        className="md:hidden text-gray-400 hover:text-white transition-colors"
-                    >
-                        <X size={24} />
-                    </button>
-                </div>
+                isOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}>
+                {/* Header */}
+                <div className="h-20 flex items-center justify-between px-6 border-b border-gray-700 bg-gradient-to-r from-gray-800 to-gray-900">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                            <span className="text-white text-xl font-bold">E</span>
+                        </div>
+                        <h1 className="text-xl font-bold">Expenso</h1>
+                    </div>
+                    <button 
+                        onClick={() => setIsOpen(false)} 
+                        className="md:hidden text-gray-400 hover:text-white transition-colors"
+                    >
+                        <X size={24} />
+                    </button>
+                </div>
 
-                {/* User Profile */}
-                <div className="px-4 py-6 border-b border-gray-700">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                            <span className="text-white text-lg font-bold">
-                                {user?.name?.charAt(0) || 'U'}
-                            </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-white truncate">{user?.name || 'User'}</p>
-                            <p className="text-xs text-gray-400 truncate">{user?.email || 'user@example.com'}</p>
-                        </div>
-                    </div>
-                </div>
-                
-                {/* Navigation */}
-                <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-                    {navItems.map(item => <NavLink key={item.name} {...item} />)}
-                </nav>
-                
-                {/* Logout */}
-                <div className="px-4 py-6 border-t border-gray-700">
-                    <button 
-                        onClick={handleLogout}
-                        className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-red-600 hover:text-white transition-all duration-200"
-                    >
-                        <LogOut size={20} />
-                        <span className="font-medium">Logout</span>
-                    </button>
-                </div>
-            </aside>
+                {/* User Profile */}
+                <div className="px-4 py-6 border-b border-gray-700">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-lg font-bold">
+                                {user?.name?.charAt(0) || 'U'}
+                            </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-white truncate">{user?.name || 'User'}</p>
+                            <p className="text-xs text-gray-400 truncate">{user?.email || 'user@example.com'}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                {/* Navigation */}
+                <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                    {/* 3. Map over the new, FILTERED list of items */}
+                    {filteredNavItems.map(item => <NavLink key={item.name} {...item} />)}
+                </nav>
+                
+                {/* Logout */}
+                <div className="px-4 py-6 border-t border-gray-700">
+                    <button 
+                        onClick={handleLogout}
+                        className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-red-600 hover:text-white transition-all duration-200"
+                    >
+                        <LogOut size={20} />
+                        <span className="font-medium">Logout</span>
+                    </button>
+                </div>
+            </aside>
         </>
     );
 };
+
 
 const Header = ({ toggleSidebar }) => {
     const { user } = useAuth();

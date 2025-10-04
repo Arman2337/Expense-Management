@@ -11,3 +11,13 @@
 //         return apiClient.post(`/approval/process/${expenseId}`, decisionData);
 //     }
 // };
+
+import apiClient from './api';
+
+const processExpense = (expenseId, decision, comments) => {
+    return apiClient.post(`/approvals/process/${expenseId}`, { decision, comments });
+};
+
+export const approvalService = {
+    processExpense,
+};

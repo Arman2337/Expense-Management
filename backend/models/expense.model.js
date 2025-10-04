@@ -54,6 +54,10 @@ module.exports = (sequelize, Sequelize) => {
         approvedById: {
             type: Sequelize.INTEGER
             // This stores who gave the final approval
+        },
+        approvalRuleId: {
+            type: Sequelize.INTEGER,
+            allowNull: true // Can be null if no specific rule applies
         }
     });
 
@@ -79,6 +83,10 @@ module.exports = (sequelize, Sequelize) => {
         Expense.belongsTo(models.User, {
             foreignKey: 'approvedById',
             as: 'approvedBy'
+        });
+        Expense.belongsTo(models.ApprovalRule, {
+            foreignKey: 'approvalRuleId',
+            as: 'approvalRule'
         });
     };
 

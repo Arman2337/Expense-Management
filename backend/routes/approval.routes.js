@@ -1,11 +1,12 @@
-// routes/approval.routes.js
 const controller = require("../controllers/approval.controller");
-const { checkAuth, checkManager } = require("../middleware/auth.middleware");
-const router =require("express").Router();
+const router = require("express").Router();
+const { checkAuth, checkRole } = require("../middleware/auth.middleware");
 
-// Approving or rejecting requires Manager or Admin role
-router.use(checkAuth, checkManager);
-
-router.post("/:expenseId", controller.processExpense);
+// Use a more specific path: /process/:expenseId
+router.post(
+    "/process/:expenseId", 
+    [checkAuth, checkRole(['Manager', 'Admin'])], 
+    controller.processExpense
+);
 
 module.exports = router;

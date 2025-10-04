@@ -47,6 +47,11 @@ const deleteExpense = async (expenseId) => {
     return await apiClient.delete(`/expenses/${expenseId}`);
 };
 
+
+const getAllPending = async () => {
+    return await apiClient.get('/expenses/all-pending');
+};
+
 export const expenseService = {
     submitExpense,
     getMyExpenses,
@@ -55,4 +60,5 @@ export const expenseService = {
     getExpenseById,
     updateExpense,
     deleteExpense,
+    getAllPending,
 };

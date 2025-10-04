@@ -10,12 +10,21 @@ exports.signup = async (req, res) => {
   const { companyName, countryCode, email, password, adminName } = req.body;
 
   try {
-    // Fetch currency from the external API based on country 
-    // Note: In a real app, you'd find the country by code and get its currency.
-    // This is a simplified example.
-    const currencyResponse = await axios.get(`https://restcountries.com/v3.1/all?fields=name,currencies`);
-    // This logic would need to be more robust to find the correct currency
-    const defaultCurrency = 'USD'; // Placeholder
+        let defaultCurrency = 'USD'; // Default fallback currency
+        if (countryCode) {
+            try {
+                // Fetch currency from the external API based on the provided country code
+                const currencyResponse = await axios.get(`https://restcountries.com/v3.1/alpha/${countryCode}?fields=currencies`);
+                if (currencyResponse.data.currencies) {
+                    const currencyKey = Object.keys(currencyResponse.data.currencies)[0];
+                    if (currencyKey) {
+                        defaultCurrency = currencyKey;
+                    }
+                }
+            } catch (apiError) {
+                console.error("Could not fetch currency for country code:", countryCode, apiError.message);
+            }
+        }
 
     const company = await Company.create({
       name: companyName,
@@ -34,6 +43,7 @@ exports.signup = async (req, res) => {
     req.session.userId = user.id;
     req.session.role = user.role;
     req.session.companyId = user.companyId;
+
 
     res.status(201).send({ message: "Admin and Company registered successfully!" });
   } catch (error) {
