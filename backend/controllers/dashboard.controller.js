@@ -13,6 +13,10 @@ exports.getStats = async (req, res) => {
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
 
+        // Fetch company to get defaultCurrency
+        const company = await db.Company.findByPk(companyId);
+        const defaultCurrency = company ? company.defaultCurrency : 'USD';
+
         switch (role) {
             case 'admin':
                 stats.totalUsers = await User.count({ where: { companyId } });
@@ -26,8 +30,6 @@ exports.getStats = async (req, res) => {
             case 'manager':
                 const employees = await User.findAll({ where: { managerId: userId } });
                 const employeeIds = employees.map(e => e.id);
-                
-                // **THE FIX IS HERE:**
                 // Querying against the new 'approvedById' field and using the correct date object
                 const approvedTodayCount = await Expense.count({
                     where: { 
@@ -55,6 +57,7 @@ exports.getStats = async (req, res) => {
                 return res.status(400).send({ message: "Invalid role specified." });
         }
 
+        stats.defaultCurrency = defaultCurrency;
         res.status(200).json(stats);
     } catch (error) {
         res.status(500).send({ message: error.message });

@@ -104,13 +104,26 @@ const ManagerDashboard = () => {
         }
     };
 
-    if (isLoading || !stats) return <Loader />;
 
-    const statCards = [
-        { title: 'Pending Approvals', value: approvals.length, icon: Clock, color: 'bg-gradient-to-br from-yellow-500 to-yellow-600' },
-        { title: 'Approved Today', value: stats.approvedToday, icon: CheckCircle, color: 'bg-gradient-to-br from-green-500 to-green-600', trend: stats.approvalTrend },
-        { title: 'Team Total (Month)', value: `$${stats.teamMonthlyTotal}`, icon: DollarSign, color: 'bg-gradient-to-br from-blue-500 to-blue-600' },
-    ];
+    if (isLoading || !stats) return <Loader />;
+
+    // Utility to get currency symbol
+    const getCurrencySymbol = (currency) => {
+        switch ((currency || '').toUpperCase()) {
+            case 'INR': return '₹';
+            case 'USD': return '$';
+            case 'EUR': return '€';
+            case 'GBP': return '£';
+            default: return currency || '$';
+        }
+    };
+    const currencySymbol = getCurrencySymbol(stats.defaultCurrency);
+
+    const statCards = [
+        { title: 'Pending Approvals', value: approvals.length, icon: Clock, color: 'bg-gradient-to-br from-yellow-500 to-yellow-600' },
+        { title: 'Approved Today', value: stats.approvedToday, icon: CheckCircle, color: 'bg-gradient-to-br from-green-500 to-green-600', trend: stats.approvalTrend },
+        { title: 'Team Total (Month)', value: `${currencySymbol}${stats.teamMonthlyTotal}`, icon: DollarSign, color: 'bg-gradient-to-br from-blue-500 to-blue-600' },
+    ];
 
     return (
         <>
@@ -136,21 +149,33 @@ const AdminDashboard = () => {
             .finally(() => setIsLoading(false));
     }, []);
 
-    if (isLoading || !stats) return <Loader />;
+    if (isLoading || !stats) return <Loader />;
 
-    const statCards = [
-        { title: 'Total Users', value: stats.totalUsers, icon: Users, color: 'bg-gradient-to-br from-purple-500 to-purple-600', trend: stats.userTrend },
-        { title: 'Total Pending', value: stats.totalPending, icon: Clock, color: 'bg-gradient-to-br from-yellow-500 to-yellow-600' },
-        { title: 'Company Monthly Total', value: `$${stats.companyMonthlyTotal}`, icon: DollarSign, color: 'bg-gradient-to-br from-blue-500 to-blue-600', trend: stats.monthlyTrend },
-    ];
-    
-    return (
-        <div className="space-y-6 animate-fadeIn">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {statCards.map((stat, index) => <StatCard key={index} {...stat} />)}
-            </div>
-        </div>
-    );
+    // Utility to get currency symbol
+    const getCurrencySymbol = (currency) => {
+        switch ((currency || '').toUpperCase()) {
+            case 'INR': return '₹';
+            case 'USD': return '$';
+            case 'EUR': return '€';
+            case 'GBP': return '£';
+            default: return currency || '$';
+        }
+    };
+    const currencySymbol = getCurrencySymbol(stats.defaultCurrency);
+
+    const statCards = [
+        { title: 'Total Users', value: stats.totalUsers, icon: Users, color: 'bg-gradient-to-br from-purple-500 to-purple-600', trend: stats.userTrend },
+        { title: 'Total Pending', value: stats.totalPending, icon: Clock, color: 'bg-gradient-to-br from-yellow-500 to-yellow-600' },
+        { title: 'Company Monthly Total', value: `${currencySymbol}${stats.companyMonthlyTotal}`, icon: DollarSign, color: 'bg-gradient-to-br from-blue-500 to-blue-600', trend: stats.monthlyTrend },
+    ];
+    
+    return (
+        <div className="space-y-6 animate-fadeIn">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {statCards.map((stat, index) => <StatCard key={index} {...stat} />)}
+            </div>
+        </div>
+    );
 };
 
 // --- Main Dashboard Component ---
