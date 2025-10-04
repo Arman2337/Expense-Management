@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect  } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 
@@ -6,7 +6,23 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const checkSession = async () => {
+            try {
+                const response = await authService.me();
+                setUser(response.data);
+            } catch (error) {
+                // No active session found, which is normal if not logged in
+                setUser(null);
+            } finally {
+                setLoading(false); // Stop loading once the check is complete
+            }
+        };
+        checkSession();
+    }, []);
 
     const login = async (email, password) => {
         try {
@@ -21,9 +37,9 @@ export const AuthProvider = ({ children }) => {
 
     const signup = async (signupData) => {
         try {
-            // Call the signup service
-            await authService.signup(signupData.companyName, signupData.adminName, signupData.email, signupData.password);
-            // After a successful signup, automatically log the new user in
+            // **THE FIX IS HERE:** We now pass the entire signupData object directly.
+            await authService.signup(signupData);
+            // After signup, automatically log the new user in
             await login(signupData.email, signupData.password);
         } catch (error) {
             console.error("Signup failed:", error);
@@ -39,13 +55,18 @@ export const AuthProvider = ({ children }) => {
 
     const value = {
         user,
+        loading,
         isAuthenticated: !!user, // isAuthenticated is true if user is not null
         login,
         signup,
         logout,
     };
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+   return (
+        <AuthContext.Provider value={value}>
+            {!loading && children}
+        </AuthContext.Provider>
+    );
 };
 
 export const useAuth = () => {

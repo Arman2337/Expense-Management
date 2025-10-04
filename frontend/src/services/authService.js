@@ -14,8 +14,13 @@ const logout = async () => {
     return await apiClient.post('/auth/logout');
 };
 
+const me = async () => {
+    return await apiClient.get('/auth/me');
+};
+
 export const authService = {
     login,
     signup,
     logout,
+    me,
 };
