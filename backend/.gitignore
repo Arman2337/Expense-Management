@@ -1,0 +1,6 @@
+# Dependencies
+/node_modules
+
+# Environment Variables
+# Should not be committed to your repository for security reasons
+.env
