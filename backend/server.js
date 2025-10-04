@@ -38,6 +38,14 @@ app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/expenses', require('./routes/expense.routes'));
 app.use('/api/approvals', require('./routes/approval.routes'));
 app.use('/api/dashboard', require('./routes/dashboard.routes'));
+console.log('Loading OCR routes...');
+try {
+    const ocrRoutes = require('./routes/ocr.routes');
+    app.use('/api/ocr', ocrRoutes);
+    console.log('✓ OCR routes loaded successfully');
+} catch (error) {
+    console.error('✗ Error loading OCR routes:', error);
+}
 
 
 // Set port, listen for requests
