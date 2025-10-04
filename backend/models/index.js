@@ -16,31 +16,27 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
-// Import models
+// Import all models and add them to the db object
 db.Company = require("./company.model.js")(sequelize, Sequelize);
 db.User = require("./user.model.js")(sequelize, Sequelize);
 db.Expense = require("./expense.model.js")(sequelize, Sequelize);
+// ADD THESE TWO LINES TO LOAD YOUR NEW MODELS
+db.ApprovalRule = require("./approvalRule.model.js")(sequelize, Sequelize);
+db.ApprovalStep = require("./approvalStep.model.js")(sequelize, Sequelize);
 
-// --- Define Associations ---
 
-// A Company has many Users
-db.Company.hasMany(db.User, { as: "users" });
-db.User.belongsTo(db.Company, {
-  foreignKey: "companyId",
-  as: "company",
+// --- Run Associations ---
+// This code block automatically runs the .associate function from each model file,
+// ensuring all relationships are created correctly.
+Object.keys(db).forEach(modelName => {
+  if (db[modelName].associate) {
+    db[modelName].associate(db);
+  }
 });
 
-// A User (Manager) can have many Employees
-// This sets up the manager relationship [cite: 15]
-db.User.hasMany(db.User, { as: 'employees', foreignKey: 'managerId' });
-db.User.belongsTo(db.User, { as: 'manager', foreignKey: 'managerId' });
-
-// A User can submit many Expenses
-db.User.hasMany(db.Expense, { as: 'expenses', foreignKey: 'submittedById' });
-db.Expense.belongsTo(db.User, { as: 'submittedBy', foreignKey: 'submittedById' });
-
-// An Expense is approved by a sequence of Users (Managers/Admins)
-db.Expense.belongsTo(db.User, { as: 'currentApprover', foreignKey: 'currentApproverId' });
-
+// Automatically alter tables to match models (fixes missing columns)
+db.sequelize.sync({ alter: true })
+  .then(() => console.log('Database synchronized (altered).'))
+  .catch(err => console.error('Database sync error:', err));
 
 module.exports = db;

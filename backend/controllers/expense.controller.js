@@ -16,12 +16,14 @@ exports.submitExpense = async (req, res) => {
         const user = await User.findByPk(submittedById, { include: 'company' });
         if (!user) return res.status(404).send({ message: 'User not found.' });
 
+        // Use provided currency or fallback to company's default currency
         const companyCurrency = user.company.defaultCurrency;
+        const usedCurrency = currency && currency.trim() ? currency : companyCurrency;
         let amountInCompanyCurrency = parseFloat(amount);
 
-        [cite_start]// Convert currency if it's different from the company's currency [cite: 18, 44]
-        if (currency && currency.toUpperCase() !== companyCurrency.toUpperCase()) {
-            const response = await axios.get(`https://api.exchangerate-api.com/v4/latest/${currency}`);
+        // Convert currency if it's different from the company's currency
+        if (usedCurrency.toUpperCase() !== companyCurrency.toUpperCase()) {
+            const response = await axios.get(`https://api.exchangerate-api.com/v4/latest/${usedCurrency}`);
             const rate = response.data.rates[companyCurrency];
             if (!rate) {
                 return res.status(400).send({ message: `Currency conversion rate for ${companyCurrency} not found.` });
@@ -60,9 +62,10 @@ exports.submitExpense = async (req, res) => {
             return res.status(400).send({ message: "No approver could be found for this expense. Please contact an admin." });
         }
         
+
         const expense = await Expense.create({
             amount: parseFloat(amount),
-            currency,
+            currency: usedCurrency,
             amountInCompanyCurrency,
             category,
             description,

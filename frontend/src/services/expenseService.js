@@ -11,7 +11,7 @@ const submitExpense = async (expenseData) => {
         }
     };
     
-    return await apiClient.post('/expenses', expenseData, config);
+    return await apiClient.post('/expenses/submit', expenseData, config);
 };
 
 const getMyExpenses = async () => {
@@ -24,7 +24,7 @@ const getPendingApprovals = async () => {
 };
 
 const processExpense = async (expenseId, decision, comments) => {
-    return await apiClient.post(`/approvals/${expenseId}`, { decision, comments });
+    return await apiClient.post(`/approvals/process/${expenseId}`, { decision, comments });
 };
 
 const getExpenseById = async (expenseId) => {
