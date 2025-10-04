@@ -21,7 +21,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         { name: 'Pending Approvals', icon: <ShieldCheck size={20} />, path: '/approvals/team', roles: ['Manager'] },
         { name: 'User Management', icon: <Users size={20} />, path: '/users', roles: ['Admin'] },
         { name: 'Approval Rules', icon: <Scale size={20} />, path: '/rules', roles: ['Admin'] },
-        { name: 'Settings', icon: <Settings size={20} />, path: '/settings', roles: ['Admin'] },
+        { name: 'Settings', icon: <Settings size={20} />, path: '/settings', roles: ['Admin', 'Manager', 'Employee'] },
     ], []);
 
     // 2. Filter the items based on the current user's role
