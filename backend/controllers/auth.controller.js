@@ -7,15 +7,27 @@ const Company = db.Company;
 
 // On first login/signup, a new Company and Admin User are auto-created [cite: 11]
 exports.signup = async (req, res) => {
+  // Added countryCode to be received from the frontend
   const { companyName, countryCode, email, password, adminName } = req.body;
 
   try {
-    // Fetch currency from the external API based on country 
-    // Note: In a real app, you'd find the country by code and get its currency.
-    // This is a simplified example.
-    const currencyResponse = await axios.get(`https://restcountries.com/v3.1/all?fields=name,currencies`);
-    // This logic would need to be more robust to find the correct currency
-    const defaultCurrency = 'USD'; // Placeholder
+    let defaultCurrency = 'USD'; // Default fallback currency
+    try {
+        // Fetch currency from the external API based on country code [cite: 48]
+        const currencyResponse = await axios.get(`https://restcountries.com/v3.1/alpha/${countryCode}?fields=currencies`);
+        if (currencyResponse.data.currencies) {
+            // Get the first currency code (e.g., 'USD', 'INR')
+            const currencyKey = Object.keys(currencyResponse.data.currencies)[0];
+            if (currencyKey) {
+                defaultCurrency = currencyKey;
+            }
+        }
+    } catch (apiError) {
+        // If the API call fails or country is not found, we'll log it and use the fallback.
+        console.error("Could not fetch currency for country code:", countryCode, apiError.message);
+        // We can optionally send a warning, but for signup flow, we'll proceed with the default.
+    }
+
 
     const company = await Company.create({
       name: companyName,
@@ -26,7 +38,7 @@ exports.signup = async (req, res) => {
       name: adminName,
       email: email,
       password: bcrypt.hashSync(password, 8),
-      role: 'Admin', // First user is always an Admin
+      role: 'Admin', // First user is always an Admin [cite: 11]
       companyId: company.id,
     });
 
@@ -37,6 +49,9 @@ exports.signup = async (req, res) => {
 
     res.status(201).send({ message: "Admin and Company registered successfully!" });
   } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+        return res.status(400).send({ message: "Failed! Email is already in use." });
+    }
     res.status(500).send({ message: error.message });
   }
 };
