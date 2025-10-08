@@ -1,6 +1,5 @@
 # 🚀 AI-Powered Expense Management System
 
-[![Winner Badge](https://img.shields.io/badge/🏆-Hackathon%20Winner-gold?style=for-the-badge)](https://github.com)
 [![Built with React](https://img.shields.io/badge/Frontend-React%20+%20Tailwind-blue?style=flat-square&logo=react)](https://reactjs.org)
 [![Powered by Node.js](https://img.shields.io/badge/Backend-Node.js%20+%20Express-green?style=flat-square&logo=node.js)](https://nodejs.org)
 [![OCR Integration](https://img.shields.io/badge/AI-OCR%20Powered-purple?style=flat-square&logo=artificial-intelligence)](https://tesseract.js.org)
@@ -212,19 +211,6 @@ GET    /uploads/:filename    # Serve uploaded files
 ```
 </details>
 
-## 🎨 Screenshots
-
-### Employee Dashboard
-![Employee Dashboard](https://via.placeholder.com/800x400/4F46E5/FFFFFF?text=Employee+Dashboard)
-*Clean, intuitive interface with OCR-powered expense submission*
-
-### Manager Approval Portal
-![Manager Dashboard](https://via.placeholder.com/800x400/059669/FFFFFF?text=Manager+Approval+Portal)
-*Streamlined approval workflow with currency conversion*
-
-### Admin System Console
-![Admin Console](https://via.placeholder.com/800x400/DC2626/FFFFFF?text=Admin+System+Console)
-*Comprehensive system management and user administration*
 
 ## 🧪 Testing
 
@@ -323,29 +309,3 @@ docker-compose up -d
 - 🔗 **ERP Integration** - Connect with SAP, QuickBooks, etc.
 - 🌐 **Multi-tenancy** - Support multiple organizations
 
-## 📝 License
-
-MIT License - feel free to use this project for your organization!
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-## 📞 Support
-
-- 📧 **Email**: support@expensemanagement.com
-- 📱 **Demo**: [Live Demo](https://expense-demo.com)
-- 📖 **Documentation**: [Full Docs](https://docs.expensemanagement.com)
-
----
-
-<div align="center">
-
-**🏆 Built for [Hackathon Name] 2024 🏆**
-
-*Revolutionizing expense management with AI-powered automation*
-
-[![GitHub stars](https://img.shields.io/github/stars/username/expense-management?style=social)](https://github.com/username/expense-management)
-[![GitHub forks](https://img.shields.io/github/forks/username/expense-management?style=social)](https://github.com/username/expense-management)
-
-</div>
